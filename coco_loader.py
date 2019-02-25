@@ -54,6 +54,16 @@ class coco_loader(Dataset):
       split_info = json.load(fin)
     annos = {}
     for item in split_info['images']:
+      # todo: daniela changes for succeed to run in little images. remain only relevant images in train
+      if not(str(item['filename'])=='COCO_train2014_000000000009.jpg' or \
+              str(item['filename']) == 'COCO_train2014_000000000025.jpg' or \
+              str(item['filename']) == 'COCO_train2014_000000000030.jpg' or \
+              str(item['filename']) == 'COCO_val2014_000000000074.jpg' or \
+                str(item['filename']) == 'COCO_val2014_000000000073.jpg' or \
+              str(item['filename']) == 'COCO_val2014_000000000042.jpg' \
+              ):
+        continue
+      print('str(item[filename])='+str(item['filename']))
       if self.split == 'train':
         if item['split'] == 'train' or item['split'] == 'restval':
           annos[item['cocoid']] = item
@@ -69,7 +79,9 @@ class coco_loader(Dataset):
 
     captions = [caption['raw'] for caption in anno['sentences']]
 
-    imgpath = '%s/%s/%s'%(self.coco_root, anno['filepath'], anno['filename'])
+    # imgpath = '%s/%s/%s'%(self.coco_root, anno['filepath'], anno['filename']) #todo from daniela:source code
+    imgpath = os.path.join(self.coco_root, anno['filepath'], anno['filename'])
+
     img = Image.open(os.path.join(imgpath)).convert('RGB')
     img = self.img_transforms(img)
 

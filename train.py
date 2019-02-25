@@ -24,6 +24,7 @@ from vggfeats import Vgg16Feats
 from tqdm import tqdm 
 from test import test 
 
+# import pdb#todo:remove it
 def repeat_img_per_cap(imgsfeats, imgsfc7, ncap_per_img):
   """Repeat image features ncap_per_img times"""
 
@@ -76,13 +77,13 @@ def train(args):
 
   for epoch in range(args.epochs):
     loss_train = 0.
-    
+
     if(epoch == args.finetune_after):
       img_optimizer = optim.RMSprop(model_imgcnn.parameters(), lr=1e-5)
       img_scheduler = lr_scheduler.StepLR(img_optimizer, step_size=args.lr_step_size, gamma=.1)
 
     scheduler.step()    
-    if(img_optimizer):
+    if(img_optimizer) :
       img_scheduler.step()
 
     #One epoch of train
