@@ -34,6 +34,13 @@ class AttentionLayer(nn.Module):
     self.bmm = torch.bmm
 
   def forward(self, x, wordemb, imgsfeats):
+    """
+
+    :param x: cancatenate of word embedding and sentence embedding
+    :param wordemb: sentence embedding
+    :param imgsfeats: features from fc7 of VGG16
+    :return:
+    """
     residual = x
 
     x = (self.in_projection(x) + wordemb) * math.sqrt(0.5)
@@ -91,6 +98,14 @@ class convcap(nn.Module):
     self.classifier_1 = Linear((nfeats // 2), num_wordclass, dropout=dropout)
 
   def forward(self, imgsfeats, imgsfc7, wordclass):
+    """
+    :param imgsfeats: features from VGG16
+    :param imgsfc7: classifications from VGG16
+    :param wordclass: Variable of matrix: each row represent caption num  of this image,
+                      column represents word idx in the sentence,
+                      value contain the index of this word from the dict
+    :return:
+    """
 
     attn_buffer = None
     wordemb = self.emb_0(wordclass)
@@ -106,7 +121,7 @@ class convcap(nn.Module):
       
       if(i == 0):
         x = x.transpose(2, 1)
-        residual = self.resproj(x)
+        residual = self.resproj(x) #linear layer to reduce dim
         residual = residual.transpose(2, 1)
         x = x.transpose(2, 1)
       else:

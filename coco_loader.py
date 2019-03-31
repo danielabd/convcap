@@ -49,21 +49,26 @@ class coco_loader(Dataset):
       ])
 
   def get_split_info(self, split_file):
+    '''
+    this function creates self.annos(dict: key=img id, val=item object form the json file which for each image there is describing), self.ids = list of img ids.
+    :param split_file: full path file for describing the images
+    :return:
+    '''
     print('Loading annotation file...')
     with open(split_file) as fin:
       split_info = json.load(fin)
     annos = {}
     for item in split_info['images']:
       # todo: daniela changes for succeed to run in little images. remain only relevant images in train
-      if not(str(item['filename'])=='COCO_train2014_000000000009.jpg' or \
-              str(item['filename']) == 'COCO_train2014_000000000025.jpg' or \
-              str(item['filename']) == 'COCO_train2014_000000000030.jpg' or \
-              str(item['filename']) == 'COCO_val2014_000000000074.jpg' or \
-                str(item['filename']) == 'COCO_val2014_000000000073.jpg' or \
-              str(item['filename']) == 'COCO_val2014_000000000042.jpg' \
-              ):
-        continue
-      print('str(item[filename])='+str(item['filename']))
+      #if not(str(item['filename'])=='COCO_train2014_000000000009.jpg' or \
+      #        str(item['filename']) == 'COCO_train2014_000000000025.jpg' or \
+      #        str(item['filename']) == 'COCO_train2014_000000000030.jpg' or \
+      #        str(item['filename']) == 'COCO_val2014_000000000074.jpg' or \
+      #          str(item['filename']) == 'COCO_val2014_000000000073.jpg' or \
+      #        str(item['filename']) == 'COCO_val2014_000000000042.jpg' \
+      #        ):
+      #  continue
+      #print('str(item[filename])='+str(item['filename']))
       if self.split == 'train':
         if item['split'] == 'train' or item['split'] == 'restval':
           annos[item['cocoid']] = item
@@ -77,6 +82,7 @@ class coco_loader(Dataset):
     img_id = self.ids[idx]
     anno = self.annos[img_id]
 
+    # list of all sentences describing this image
     captions = [caption['raw'] for caption in anno['sentences']]
 
     # imgpath = '%s/%s/%s'%(self.coco_root, anno['filepath'], anno['filename']) #todo from daniela:source code
@@ -100,6 +106,7 @@ class coco_loader(Dataset):
     sentence_mask = torch.ByteTensor(len(captions), self.max_tokens).zero_()
 
     for i, caption in enumerate(captions):
+      #conver sentence to list of words without punctuation
       words = str(caption).lower().translate(None, string.punctuation).strip().split()
       words = ['<S>'] + words
       num_words = min(len(words), self.max_tokens-1)
@@ -109,9 +116,16 @@ class coco_loader(Dataset):
           break
         if(word not in self.wordlist):
           word = 'UNK'
+        #wordclass is a matrix: each row represent caption num  of this image, column represents place in the sentenc, value contain the index of this word
         wordclass[i, word_i] = self.wordlist.index(word)
-
-    return img, captions, wordclass, sentence_mask, img_id 
+    # img - the img
+    # captions - all sentences of this image. if not train - single class
+    # wordclass - matrix: each row represent caption num  of this image,
+    #                     column represents word idx in the sentence,
+    #                     value contain the index of this word from the dict
+    # sentence_mask - vector which contain 1 until the max words we need to relate to it
+    # img_id - img id uniqe for image
+    return img, captions, wordclass, sentence_mask, img_id
 
   def __len__(self):
     return len(self.ids)

@@ -21,12 +21,18 @@ from torchvision import models
 from coco_loader import coco_loader
 from convcap import convcap
 from vggfeats import Vgg16Feats
-from tqdm import tqdm 
-from test import test 
+from tqdm import tqdm
+from test import test
 
-# import pdb#todo:remove it
 def repeat_img_per_cap(imgsfeats, imgsfc7, ncap_per_img):
-  """Repeat image features ncap_per_img times"""
+  """
+  Repeat image features ncap_per_img times
+  duplicate data along first (1) dim
+  :param imgsfeats: features from VGG16
+  :param imgsfc7: classifications from VGG16
+  :param ncap_per_img: num of gt captions per image
+  :return:
+  """
 
   batchsize, featdim, feat_h, feat_w = imgsfeats.size()
   batchsize_cap = batchsize*ncap_per_img
@@ -41,7 +47,6 @@ def repeat_img_per_cap(imgsfeats, imgsfc7, ncap_per_img):
     batchsize, ncap_per_img, featdim)
   imgsfc7 = imgsfc7.contiguous().view(\
     batchsize_cap, featdim)
-
   return imgsfeats, imgsfc7
 
 def train(args):
@@ -87,6 +92,14 @@ def train(args):
       img_scheduler.step()
 
     #One epoch of train
+    batch_idx=0
+    # img - the img
+    # captions - all sentences of this image. if not train - single class
+    # wordclass - matrix: each row represent caption num  of this image,
+    #                     column represents word idx in the sentence,
+    #                     value contain the index of this word from the dict
+    # sentence_mask - vector which contain 1 until the max words we need to relate to it
+    # img_id - img id uniqe for image
     for batch_idx, (imgs, captions, wordclass, mask, _) in \
       tqdm(enumerate(train_data_loader), total=nbatches):
 
@@ -101,7 +114,8 @@ def train(args):
       if(img_optimizer):
         img_optimizer.zero_grad() 
 
-      imgsfeats, imgsfc7 = model_imgcnn(imgs_v)
+
+      imgsfeats, imgsfc7 = model_imgcnn(imgs_v)#imgsfeats-features from VGG16, imgsfc7-classifications from VGG16
       imgsfeats, imgsfc7 = repeat_img_per_cap(imgsfeats, imgsfc7, ncap_per_img)
       _, _, feat_h, feat_w = imgsfeats.size()
 
@@ -115,6 +129,7 @@ def train(args):
       wordclass_v = wordclass_v[:,1:]
       mask = mask[:,1:].contiguous()
 
+      # todo: continue from here!!!
       wordact_t = wordact.permute(0, 2, 1).contiguous().view(\
         batchsize_cap*(max_tokens-1), -1)
       wordclass_t = wordclass_v.contiguous().view(\
@@ -132,7 +147,8 @@ def train(args):
         loss = F.cross_entropy(wordact_t[maskids, ...], \
           wordclass_t[maskids, ...].contiguous().view(maskids.shape[0]))
 
-      loss_train = loss_train + loss.data[0]
+      import pdb;pdb.set_trace()
+      loss_train = loss_train + loss.item()
 
       loss.backward()
 

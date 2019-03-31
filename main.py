@@ -4,10 +4,10 @@ import matplotlib; matplotlib.use('Agg')
 import os
 import os.path as osp
 import argparse
-
-from train import train 
-from test import test
-from test_beam import test_beam 
+# todo: remove remark
+# from train import train
+# from test import test
+# from test_beam import test_beam
 
 import pdb #todo: remove it
 
@@ -17,30 +17,30 @@ parser.add_argument('model_dir', help='output directory to save models & results
 
 parser.add_argument('-g', '--gpu', type=int, default=0,\
                     help='gpu device id')
-#todo: change coco_little->coco
-parser.add_argument('--coco_root', type=str, default= './data/coco_little/',\
+
+parser.add_argument('--coco_root', type=str, default= './data/coco/',\
                     help='directory containing coco dataset train2014, val2014, & annotations')
 
 parser.add_argument('-t', '--is_train', type=int, default=1,\
                     help='use 1 to train model')
-#todo: change 1->30
-parser.add_argument('-e', '--epochs', type=int, default=1,\
+
+parser.add_argument('-e', '--epochs', type=int, default=30,\
                     help='number of training epochs')
 
-#todo: relace 1->20
-parser.add_argument('-b', '--batchsize', type=int, default=1,\
+
+parser.add_argument('-b', '--batchsize', type=int, default=20,\
                     help='number of images per training batch')
-#todo: change 1->5
-parser.add_argument('-c', '--ncap_per_img', type=int, default=1,\
+
+parser.add_argument('-c', '--ncap_per_img', type=int, default=5,\
                     help='ground-truth captions per image in training batch')
-#todo: change 1->3
-parser.add_argument('-n', '--num_layers', type=int, default=1,\
+
+parser.add_argument('-n', '--num_layers', type=int, default=3,\
                     help='depth of convcap network')
-#todo: change 1->4
-parser.add_argument('-m', '--nthreads', type=int, default=1,\
+
+parser.add_argument('-m', '--nthreads', type=int, default=4,\
                     help='pytorch data loader threads')
-#todo: change 1->8
-parser.add_argument('-ft', '--finetune_after', type=int, default=1,\
+
+parser.add_argument('-ft', '--finetune_after', type=int, default=8,\
                     help='epochs after which vgg16 is fine-tuned')
 
 parser.add_argument('-lr', '--learning_rate', type=float, default=5e-5,\
@@ -70,6 +70,9 @@ def main():
   """Train model and run inference on coco test set to output metrics"""
 
   os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
+
+  from coco_loader import coco_loader
+  train_data = coco_loader(args.coco_root, split='train', ncap_per_img=args.ncap_per_img)
 
   if(args.is_train == 1):
     train(args)

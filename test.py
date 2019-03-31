@@ -14,7 +14,7 @@ import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
-from tqdm import tqdm 
+from tqdm import tqdm
  
 from coco_loader import coco_loader
 from torchvision import models                                                                     
